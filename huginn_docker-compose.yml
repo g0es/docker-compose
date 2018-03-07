@@ -1,0 +1,59 @@
+version: '2'
+
+services:
+  mysql:
+    restart: unless-stopped
+    image: mysql:5.7
+    volumes:
+      - mysqldata:/var/lib/mysql
+    networks:
+      - hgnet
+    environment:
+      MYSQL_ROOT_PASSWORD: ROOTPASSWORD
+      MYSQL_DATABASE: huginn
+      MYSQL_USER: huginn
+      MYSQL_PASSWORD: HUGINUSERPASSWORD
+
+  huginn:
+    restart: unless-stopped
+    image: huginn/huginn
+    depends_on:
+      - mysql
+    networks:
+      - hgnet
+    environment:
+      HUGINN_DATABASE_NAME: huginn
+      HUGINN_DATABASE_USERNAME: huginn
+      HUGINN_DATABASE_PASSWORD: HUGINUSERPASSWORD
+      INVITATION_CODE: SOMERANDOMCODE
+      SMTP_DOMAIN: SMTP.domain
+      SMTP_USER_NAME: none
+      SMTP_PASSWORD: somepassword
+      SMTP_SERVER: 172.16.20.1
+      SMTP_PORT: 25
+      SMTP_AUTHENTICATION: plain
+      SMTP_ENABLE_STARTTLS_AUTO: "false"
+      INTENTIONALLY_SLEEP: 10
+      #DATABASE_INITIAL_CONNECT_MAX_RETRIES: 5
+      PORT: 3000
+      MYSQL_PORT_3306_TCP_ADDR: mysql
+      MYSQL_PORT_3306_TCP_PORT: 3306
+      EMAIL_FROM_ADDRESS: some@email.com
+      #TIMEZONE: Central Time (US & Canada)
+      #DEFAULT_HTTP_USER_AGENT: Huginn - https://github.com/huginn/huginn
+    ports:
+      - 3000:3000
+
+volumes:
+  mysqldata:
+    driver: local
+
+networks:
+  hgnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        -
+          subnet: 172.16.20.0/24
+          gateway: 172.16.20.1
